@@ -1,0 +1,14 @@
+node_modules
+dist
+.git
+.gitignore
+.DS_Store
+.env
+.env.*
+coverage
+*.log
+.vscode
+.idea
+README.md
+reference
+claude-code-handoff.md
