@@ -270,6 +270,7 @@ td.ptscol { font-family: var(--disp); font-weight: 700; }
   color: var(--ink); font-size: 14px; cursor: pointer; width: 100%;
 }
 .sheet-row:active { transform: scale(.98); }
+.sheet-row.danger { color: #ffb4ba; border-color: #5a2a30; }
 .sheet-row .ico { font-size: 18px; }
 .sheet-row .grow { flex: 1; text-align: left; }
 .sheet-row small { color: var(--muted); font-size: 11px; display: block; margin-top: 2px; }

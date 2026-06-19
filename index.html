@@ -23,6 +23,7 @@
     <div class="board-row">
       <button class="mic" id="mic">🎙️ 音声で記録</button>
       <button class="iconbtn" id="gear" aria-label="設定">⚙</button>
+      <button class="iconbtn" id="more" aria-label="試合の操作">⋯</button>
     </div>
     <div class="seg" id="focusSeg">
       <button data-f="both">両チーム</button>
@@ -79,10 +80,7 @@
     <p class="eyebrow">プレイ・バイ・プレイ</p>
     <div class="feed" id="feed"></div>
     <div class="feed-actions">
-      <button id="undo">↩ 取消</button>
-      <button id="share">📋 共有</button>
-      <button id="archive">💾 保存して新規</button>
-      <button class="danger" id="reset">🗑 リセット</button>
+      <button id="undo">↩ 直前を取り消す</button>
     </div>
   </div>
 
@@ -90,6 +88,22 @@
 </div>
 
 <div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="sheet" id="actionsSheet" role="dialog" aria-modal="true" aria-label="試合の操作">
+  <h3>試合の操作</h3>
+  <button class="sheet-row" id="actShare">
+    <span class="ico">📋</span>
+    <span class="grow">共有<small>テキスト / Markdown でコピー</small></span>
+  </button>
+  <button class="sheet-row" id="actArchive">
+    <span class="ico">💾</span>
+    <span class="grow">保存して新規<small>履歴に残して次の試合を始める</small></span>
+  </button>
+  <button class="sheet-row danger" id="actReset">
+    <span class="ico">🗑</span>
+    <span class="grow">この試合記録を破棄<small>履歴には残さない</small></span>
+  </button>
+  <button class="sheet-cancel" id="actCancel">キャンセル</button>
+</div>
 <div class="sheet" id="shareSheet" role="dialog" aria-modal="true" aria-label="共有形式を選択">
   <h3>共有形式を選ぶ</h3>
   <button class="sheet-row" data-fmt="text">
