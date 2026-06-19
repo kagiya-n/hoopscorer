@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Bibs — ピックアップ・スタッツ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12161B; --surface:#1B222A; --surface-2:#232C36; --line:#2E3946;
+    --ink:#EAF0F6; --muted:#8B98A6;
+    --steel:#8AA6C8; --steel-fill:#3E5168;     /* 濃 / dark bib */
+    --bone:#EBE5D8; --bone-fill:#EBE5D8;        /* 淡 / light bib */
+    --amber:#F5C451; --amber-ink:#1a1300; --ok:#34D399; --bad:#FF6B74;
+    --shadow:0 6px 20px rgba(0,0,0,.35);
+    --disp:'Oswald',system-ui,sans-serif;
+    --sans:system-ui,-apple-system,'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.45;padding:0 0 30px;min-height:100vh;
+    background-image:radial-gradient(1200px 400px at 50% -120px,#1d2630 0%,var(--bg) 70%);}
+  .wrap{max-width:520px;margin:0 auto;padding:0 14px}
+
+  .board{position:sticky;top:0;z-index:30;padding:12px 0 8px;background:linear-gradient(var(--bg) 80%,transparent)}
+  .score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;background:var(--surface);
+    border:1px solid var(--line);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow)}
+  .side{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+  .side.right{order:3}
+  .tag{font-family:var(--disp);font-weight:600;letter-spacing:.1em;font-size:13px;text-transform:uppercase;
+    max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tag.dark{color:var(--steel)} .tag.light{color:var(--bone)}
+  .pts{font-family:var(--disp);font-weight:700;font-size:46px;line-height:.9;font-variant-numeric:tabular-nums}
+  .pts.dark{color:var(--steel)} .pts.light{color:var(--bone)}
+  .colon{font-family:var(--disp);font-weight:500;color:var(--muted);font-size:30px}
+  .board-row{display:flex;gap:8px;margin-top:8px}
+  .mic{flex:1;display:flex;align-items:center;justify-content:center;gap:9px;background:var(--amber);color:var(--amber-ink);
+    border:none;border-radius:13px;font-family:var(--disp);font-weight:600;letter-spacing:.03em;font-size:16px;padding:13px;cursor:pointer;transition:transform .06s}
+  .mic:active{transform:scale(.98)} .mic.live{animation:pulse 1s infinite} .mic[disabled]{opacity:.45}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(245,196,81,.5)}50%{box-shadow:0 0 0 8px rgba(245,196,81,0)}}
+  .iconbtn{width:46px;flex:0 0 46px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);
+    border-radius:13px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .iconbtn:active{transform:scale(.96)}
+
+  .seg{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:4px;margin-top:8px}
+  .seg button{flex:1;border:none;background:transparent;color:var(--muted);font-family:var(--disp);font-weight:500;
+    font-size:13px;letter-spacing:.04em;padding:8px;border-radius:9px;cursor:pointer}
+  .seg button.on{background:var(--ink);color:var(--bg)}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:13px;margin-top:12px;box-shadow:var(--shadow)}
+  .eyebrow{font-family:var(--disp);text-transform:uppercase;letter-spacing:.16em;font-size:11px;color:var(--muted);margin:0 0 10px}
+
+  .banner{background:#3a2e14;border:1px solid #5e4a1c;color:#f4d98a;border-radius:10px;padding:8px 11px;font-size:12px;margin-bottom:11px}
+
+  .armed{display:flex;align-items:center;gap:10px;margin-bottom:11px;min-height:30px;font-family:var(--disp);font-size:18px}
+  .armed .dot{width:14px;height:14px;border-radius:50%}
+  .armed .clear{margin-left:auto;background:none;border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:5px 9px;font-size:12px;cursor:pointer;font-family:var(--sans)}
+  .armed.empty{color:var(--muted);font-family:var(--sans);font-size:13px}
+
+  .teamblock{margin-bottom:10px}
+  .teamlabel{font-family:var(--disp);letter-spacing:.08em;font-size:12px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+  .teamlabel .dot{width:11px;height:11px;border-radius:50%}
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-family:var(--disp);font-weight:600;font-size:16px;min-width:44px;padding:8px 11px;border-radius:11px;
+    border:1px solid var(--line);background:var(--surface-2);color:var(--ink);cursor:pointer;transition:transform .05s}
+  .chip:active{transform:scale(.95)}
+  .chip.dark.on{background:var(--steel-fill);border-color:var(--steel);color:#fff;box-shadow:0 0 0 3px rgba(138,166,200,.3)}
+  .chip.light.on{background:var(--bone-fill);border-color:var(--bone);color:#1a1f25;box-shadow:0 0 0 3px rgba(235,229,216,.25)}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .statbtn{font-family:var(--disp);font-weight:600;font-size:15px;padding:14px 4px;border-radius:13px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;transition:transform .05s,background .1s}
+  .statbtn small{font-family:var(--sans);font-weight:400;font-size:10px;color:var(--muted)}
+  .statbtn:active{transform:scale(.96)} .statbtn.flash{background:var(--ok);color:#062a1c;border-color:var(--ok)}
+
+  .cmd{display:flex;gap:8px;margin-top:12px}
+  .cmd input{flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;color:var(--ink);padding:12px 13px;font-size:15px;font-family:var(--sans)}
+  .cmd input::placeholder{color:var(--muted)} .cmd input:focus{outline:2px solid var(--amber);outline-offset:1px}
+  .cmd button{background:var(--ink);color:var(--bg);border:none;border-radius:12px;padding:0 16px;font-family:var(--disp);font-weight:600;font-size:15px;cursor:pointer}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:7px} .hint b{color:var(--ink);font-weight:600}
+
+  .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%) translateY(20px);background:var(--surface-2);
+    border:1px solid var(--line);border-radius:12px;padding:11px 16px;font-family:var(--disp);font-size:16px;box-shadow:var(--shadow);
+    opacity:0;pointer-events:none;transition:opacity .18s,transform .18s;z-index:60;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast.err{border-color:var(--bad);color:#ffd6da} .toast.ok{border-color:var(--ok)}
+
+  .feed{display:flex;flex-direction:column;gap:6px}
+  .ev{display:flex;align-items:center;gap:9px;font-family:var(--disp);font-size:15px;padding:7px 9px;background:var(--surface-2);border-radius:10px}
+  .ev .dot{width:11px;height:11px;border-radius:50%}.ev .grow{flex:1}
+  .ev .src{font-family:var(--sans);font-size:10px;color:var(--muted);border:1px solid var(--line);padding:1px 6px;border-radius:6px}
+  .feed-empty{color:var(--muted);font-size:13px}
+  .feed-actions{display:flex;gap:8px;margin-top:10px}
+  .feed-actions button{flex:1;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:11px;padding:10px;font-size:13px;cursor:pointer}
+  .feed-actions .danger{color:#ffb4ba;border-color:#5a2a30}
+
+  .box-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:100%}
+  th,td{text-align:center;padding:7px 8px;font-size:13px;white-space:nowrap}
+  th{font-family:var(--disp);font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-size:10px;border-bottom:1px solid var(--line)}
+  td.num{font-family:var(--disp);font-weight:600;text-align:left;position:sticky;left:0;background:var(--surface)}
+  th.num{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1}
+  tr.total td{border-top:1px solid var(--line);color:var(--muted)}
+  td.ptscol{font-family:var(--disp);font-weight:700}
+  .bs-head{display:flex;align-items:center;gap:8px;margin:14px 0 4px}
+  .bs-head .dot{width:12px;height:12px;border-radius:50%}
+  .bs-head h3{font-family:var(--disp);margin:0;font-size:15px;letter-spacing:.05em;text-transform:uppercase}
+
+  .settings{display:none} .settings.open{display:block}
+  .sec{margin-bottom:16px} .sec h4{font-family:var(--disp);letter-spacing:.06em;text-transform:uppercase;font-size:12px;color:var(--muted);margin:0 0 8px}
+  .field{margin-bottom:9px} .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  .field input,.field textarea{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;color:var(--ink);padding:10px;font-size:14px;font-family:var(--sans)}
+  .field textarea{min-height:96px;resize:vertical;line-height:1.6}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .statlist{display:flex;flex-direction:column;gap:6px}
+  .statrow{display:flex;align-items:center;gap:9px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .statrow input[type=checkbox]{width:18px;height:18px;accent-color:var(--amber)}
+  .statrow .lab{flex:1;font-size:14px}
+  .statrow .pt{font-family:var(--disp);font-size:12px;color:var(--muted)}
+  .statrow .rm{background:none;border:1px solid var(--line);color:#ffb4ba;border-radius:8px;padding:3px 8px;font-size:12px;cursor:pointer}
+  .addrow{display:grid;grid-template-columns:1fr 64px auto;gap:7px;margin-top:9px}
+  .addrow input{background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px;font-size:13px}
+  .addrow button{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:9px;font-size:13px;cursor:pointer;padding:0 12px}
+  .save{width:100%;background:var(--amber);color:var(--amber-ink);border:none;border-radius:11px;padding:13px;font-family:var(--disp);font-weight:600;font-size:15px;cursor:pointer;margin-top:4px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="board">
+    <div class="score">
+      <div class="side"><span class="tag dark" id="nameA">濃</span><span class="pts dark" id="scoreA">0</span></div>
+      <span class="colon">:</span>
+      <div class="side right"><span class="tag light" id="nameB">淡</span><span class="pts light" id="scoreB">0</span></div>
+    </div>
+    <div class="board-row">
+      <button class="mic" id="mic">🎙️ 音声で記録</button>
+      <button class="iconbtn" id="gear" aria-label="設定">⚙</button>
+    </div>
+    <div class="seg" id="focusSeg">
+      <button data-f="both">両チーム</button>
+      <button data-f="A">濃に集中</button>
+      <button data-f="B">淡に集中</button>
+    </div>
+  </div>
+
+  <!-- settings -->
+  <div class="panel settings" id="settings">
+    <div class="banner" id="storeBanner" style="display:none">⚠ このプレビューでは端末保存が無効です。ファイルをDLして自分のブラウザで開くと自動保存されます。</div>
+    <div class="sec">
+      <h4>チーム名</h4>
+      <div class="twocol">
+        <div class="field"><label>濃チーム</label><input id="tnameA"></div>
+        <div class="field"><label>淡チーム</label><input id="tnameB"></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h4>ロスター（1行に1人 ／「10 タナカ」「サトウ」「23」）</h4>
+      <div class="twocol">
+        <div class="field"><label>濃</label><textarea id="rosterA"></textarea></div>
+        <div class="field"><label>淡</label><textarea id="rosterB"></textarea></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h4>記録する項目</h4>
+      <div class="statlist" id="statConfig"></div>
+      <div class="addrow">
+        <input id="newStatLabel" placeholder="項目名（例：ディフレクション）">
+        <input id="newStatPts" type="number" placeholder="点" value="0">
+        <button id="addStat">追加</button>
+      </div>
+    </div>
+    <button class="save" id="saveSettings">保存して試合に戻る</button>
+  </div>
+
+  <!-- input -->
+  <div class="panel" id="inputPanel">
+    <div class="banner" id="storeBannerMain" style="display:none">端末保存は無効中（メモリ動作）。実機ブラウザで開くと保存されます。</div>
+    <div class="armed empty" id="armed">記録する選手をタップ → 項目を選択</div>
+    <div id="teamChips"></div>
+    <div class="stats" id="stats"></div>
+    <div class="cmd">
+      <input id="cmdInput" placeholder="例：濃10 スリー ／ 淡5 リバウンド" autocomplete="off">
+      <button id="cmdGo">記録</button>
+    </div>
+    <p class="hint">音声も入力欄も同じ書式： <b>チーム＋選手＋項目</b>。例「<b>濃10 スリー</b>」「<b>淡 サトウ アシスト</b>」。チームを省くと選手から自動判定します。</p>
+  </div>
+
+  <div class="panel">
+    <p class="eyebrow">プレイ・バイ・プレイ</p>
+    <div class="feed" id="feed"></div>
+    <div class="feed-actions">
+      <button id="undo">↩ 直前を取り消す</button>
+      <button class="danger" id="reset">試合をリセット</button>
+    </div>
+  </div>
+
+  <div class="panel" id="boxPanel"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- storage ----------
+  var KEY='hoops_tracker_v1';
+  function storeOK(){try{localStorage.setItem('__t','1');localStorage.removeItem('__t');return true;}catch(e){return false;}}
+  var CAN_STORE=storeOK();
+  function persist(){ if(!CAN_STORE)return; try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){} }
+  function restore(){ if(!CAN_STORE)return null; try{var s=localStorage.getItem(KEY);return s?JSON.parse(s):null;}catch(e){return null;} }
+
+  // ---------- stat presets ----------
+  var PRESETS=[
+    {id:'p2',label:'2点',sub:'2P',pts:2,kw:['2点','ツー','two','2p','得点','ゴール','シュート','レイアップ']},
+    {id:'p3',label:'3P',sub:'3P',pts:3,kw:['スリー','3点','three','3p','スリーポイント','トレ']},
+    {id:'ft',label:'フリースロー',sub:'FT',pts:1,kw:['フリースロー','フリー','ft','1点','ワンスロー']},
+    {id:'reb',label:'リバウンド',sub:'REB',pts:0,kw:['リバウンド','リバ','ボード','rebound']},
+    {id:'ast',label:'アシスト',sub:'AST',pts:0,kw:['アシスト','アシ','assist']},
+    {id:'stl',label:'スチール',sub:'STL',pts:0,kw:['スチール','スティール','カット','steal']},
+    {id:'blk',label:'ブロック',sub:'BLK',pts:0,kw:['ブロック','block']},
+    {id:'pf',label:'ファウル',sub:'PF',pts:0,kw:['ファウル','foul','反則']},
+    {id:'to',label:'ターンオーバー',sub:'TO',pts:0,kw:['ターンオーバー','ターン','ミス','turnover','to']}
+  ];
+
+  // ---------- default state ----------
+  function defaultState(){
+    var pid=0;
+    function P(arr){return arr.map(function(n){return {id:'p'+(++pid),num:n,name:''};});}
+    return {
+      v:1,
+      teams:{A:{name:'濃',tone:'dark',players:P([4,5,7,10,23])},
+             B:{name:'淡',tone:'light',players:P([3,6,8,11,21])}},
+      statIds:['p2','p3','ft','reb','ast','stl','blk','pf','to'],
+      customs:[],
+      focus:'both',
+      armed:null,
+      events:[],
+      _pid:pid,_eid:0,_cid:0
+    };
+  }
+  var state=restore()||defaultState();
+
+  // ---------- helpers ----------
+  function el(id){return document.getElementById(id);}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function z2h(s){return s.replace(/[０-９]/g,function(c){return String.fromCharCode(c.charCodeAt(0)-0xFEE0);});}
+  function norm(s){return z2h(String(s)).toLowerCase().trim();}
+  function accent(team){return state.teams[team].tone==='dark'?'var(--steel)':'var(--bone)';}
+  function toneClass(team){return state.teams[team].tone==='dark'?'dark':'light';}
+  function statDef(id){for(var i=0;i<PRESETS.length;i++)if(PRESETS[i].id===id)return PRESETS[i];
+    for(var j=0;j<state.customs.length;j++)if(state.customs[j].id===id)return state.customs[j];return null;}
+  function activeStats(){return state.statIds.map(statDef).filter(Boolean);}
+  function playerById(team,id){var ps=state.teams[team].players;for(var i=0;i<ps.length;i++)if(ps[i].id===id)return ps[i];return null;}
+  function disp(p){return p.name?p.name:('#'+p.num);}
+
+  // ---------- mutate ----------
+  function addEvent(team,playerId,statId,src){state.events.push({id:++state._eid,team:team,playerId:playerId,statId:statId,src:src||'tap'});persist();render();}
+  function undo(){if(!state.events.length){toast('取り消すものがありません','err');return;}state.events.pop();persist();render();}
+  function reset(){if(!state.events.length){toast('すでに空です');return;}if(!confirm('この試合の記録をすべて消します。よろしいですか？'))return;state.events=[];state.armed=null;persist();render();toast('リセットしました');}
+
+  // ---------- compute ----------
+  function lineFor(team,playerId){
+    var l={pts:0};activeStats().forEach(function(s){l[s.id]=0;});
+    state.events.forEach(function(e){if(e.team===team&&e.playerId===playerId){if(l[e.statId]!==undefined)l[e.statId]++;var d=statDef(e.statId);if(d)l.pts+=d.pts;}});
+    return l;
+  }
+  function teamScore(team){var s=0;state.events.forEach(function(e){if(e.team===team){var d=statDef(e.statId);if(d)s+=d.pts;}});return s;}
+
+  // ---------- parse command / voice ----------
+  function parse(raw){
+    var s=norm(raw); if(!s)return{err:'空のコマンドです'};
+    // team via name / tone
+    var team=null;
+    var na=norm(state.teams.A.name), nb=norm(state.teams.B.name);
+    if(na&&s.indexOf(na)>-1)team='A'; else if(nb&&s.indexOf(nb)>-1)team='B';
+    if(!team){if(/濃|dark|こい/.test(s))team=(state.teams.A.tone==='dark')?'A':'B';
+              else if(/淡|light|うす|あわ/.test(s))team=(state.teams.A.tone==='light')?'A':'B';}
+    // stat
+    var stat=null,as=activeStats();
+    outer:for(var i=0;i<as.length;i++){for(var k=0;k<as[i].kw.length;k++){if(as[i].kw[k]&&s.indexOf(norm(as[i].kw[k]))>-1){stat=as[i];break outer;}}}
+    // number
+    var nm=s.match(/\d+/g); var num=nm?parseInt(nm[0],10):null;
+    if(!stat)return{err:'項目名が読み取れません'};
+    // resolve player
+    function find(t){var ps=state.teams[t].players;
+      if(num!=null){for(var x=0;x<ps.length;x++)if(ps[x].num===num)return ps[x];return null;}
+      for(var y=0;y<ps.length;y++){if(ps[y].name&&s.indexOf(norm(ps[y].name))>-1)return ps[y];}return null;}
+    var res;
+    if(team){var p=find(team);if(!p)return{err:(num!=null?'#'+num:'その選手')+' が'+state.teams[team].name+'にいません'};res={team:team,player:p};}
+    else{var pa=find('A'),pb=find('B');
+      if(pa&&!pb)res={team:'A',player:pa};else if(pb&&!pa)res={team:'B',player:pb};
+      else if(pa&&pb)return{err:'どちらのチームか特定できません'};else return{err:'選手が見つかりません'};}
+    res.stat=stat;return res;
+  }
+  function runCommand(raw,src){var r=parse(raw);if(r.err){toast('⚠ '+r.err,'err');return false;}
+    addEvent(r.team,r.player.id,r.stat.id,src||'cmd');
+    toast('✓ '+state.teams[r.team].name+' '+disp(r.player)+' '+r.stat.label,'ok');return true;}
+
+  // ---------- render ----------
+  function renderScore(){el('nameA').textContent=state.teams.A.name;el('nameB').textContent=state.teams.B.name;
+    el('scoreA').textContent=teamScore('A');el('scoreB').textContent=teamScore('B');}
+  function renderFocus(){var seg=el('focusSeg');seg.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',b.dataset.f===state.focus);});
+    seg.children[1].textContent=state.teams.A.name+'に集中';seg.children[2].textContent=state.teams.B.name+'に集中';}
+  function teamsToShow(){return state.focus==='both'?['A','B']:[state.focus];}
+
+  function renderChips(){
+    var host=el('teamChips');host.innerHTML='';
+    teamsToShow().forEach(function(team){
+      var block=document.createElement('div');block.className='teamblock';
+      block.innerHTML='<div class="teamlabel '+toneClass(team)+'"><span class="dot" style="background:'+accent(team)+'"></span>'+esc(state.teams[team].name)+'</div>';
+      var chips=document.createElement('div');chips.className='chips';
+      state.teams[team].players.forEach(function(p){
+        var on=state.armed&&state.armed.team===team&&state.armed.playerId===p.id;
+        var b=document.createElement('button');b.className='chip '+toneClass(team)+(on?' on':'');
+        b.textContent=disp(p);
+        b.onclick=function(){state.armed=on?null:{team:team,playerId:p.id};renderChips();renderArmed();};
+        chips.appendChild(b);
+      });
+      block.appendChild(chips);host.appendChild(block);
+    });
+  }
+  function renderArmed(){var a=el('armed');
+    if(!state.armed||!playerById(state.armed.team,state.armed.playerId)){state.armed=null;a.className='armed empty';a.textContent='記録する選手をタップ → 項目を選択';return;}
+    var p=playerById(state.armed.team,state.armed.playerId);
+    a.className='armed';
+    a.innerHTML='<span class="dot" style="background:'+accent(state.armed.team)+'"></span>選択中　'+esc(state.teams[state.armed.team].name)+' '+esc(disp(p))+'<button class="clear" id="clearArmed">解除</button>';
+    el('clearArmed').onclick=function(){state.armed=null;renderChips();renderArmed();};
+  }
+  function renderStats(){var box=el('stats');box.innerHTML='';
+    activeStats().forEach(function(t){
+      var b=document.createElement('button');b.className='statbtn';
+      b.innerHTML=esc(t.label)+'<small>'+esc(t.sub)+(t.pts?(' +'+t.pts):'')+'</small>';
+      b.onclick=function(){if(!state.armed){toast('先に選手を選んでください','err');return;}
+        addEvent(state.armed.team,state.armed.playerId,t.id,'tap');
+        b.classList.add('flash');setTimeout(function(){b.classList.remove('flash');},220);};
+      box.appendChild(b);
+    });
+  }
+  function renderFeed(){var f=el('feed');
+    if(!state.events.length){f.innerHTML='<div class="feed-empty">まだ記録がありません。</div>';return;}
+    f.innerHTML='';
+    state.events.slice(-7).reverse().forEach(function(e){
+      var p=playerById(e.team,e.playerId);var d=statDef(e.statId);
+      var row=document.createElement('div');row.className='ev';
+      row.innerHTML='<span class="dot" style="background:'+accent(e.team)+'"></span>'+esc(p?disp(p):'?')+
+        ' <span class="grow">'+esc(d?d.label:'?')+'</span><span class="src">'+(e.src==='voice'?'🎙️音声':e.src==='cmd'?'⌨︎入力':'タップ')+'</span>';
+      f.appendChild(row);
+    });
+  }
+  function renderBox(){
+    var host=el('boxPanel');host.innerHTML='<p class="eyebrow">ボックススコア</p>';
+    var cols=activeStats();
+    teamsToShow().forEach(function(team){
+      var head=document.createElement('div');head.className='bs-head';
+      head.innerHTML='<span class="dot" style="background:'+accent(team)+'"></span><h3>'+esc(state.teams[team].name)+'</h3>';
+      host.appendChild(head);
+      var th='<th class="num">選手</th><th>PTS</th>'+cols.map(function(c){return '<th>'+esc(c.sub)+'</th>';}).join('');
+      var tot={pts:0};cols.forEach(function(c){tot[c.id]=0;});
+      var rows='';
+      state.teams[team].players.forEach(function(p){
+        var l=lineFor(team,p.id);tot.pts+=l.pts;
+        rows+='<tr><td class="num">'+esc(disp(p))+'</td><td class="ptscol">'+l.pts+'</td>'+
+          cols.map(function(c){tot[c.id]+=l[c.id];return '<td>'+l[c.id]+'</td>';}).join('')+'</tr>';
+      });
+      rows+='<tr class="total"><td class="num">計</td><td class="ptscol">'+tot.pts+'</td>'+cols.map(function(c){return '<td>'+tot[c.id]+'</td>';}).join('')+'</tr>';
+      var w=document.createElement('div');w.className='box-scroll';
+      w.innerHTML='<table><thead><tr>'+th+'</tr></thead><tbody>'+rows+'</tbody></table>';
+      host.appendChild(w);
+    });
+  }
+  function render(){renderScore();renderFocus();renderChips();renderArmed();renderStats();renderFeed();renderBox();}
+
+  // ---------- toast ----------
+  var tT;function toast(m,k){var t=el('toast');t.textContent=m;t.className='toast show'+(k?(' '+k):'');clearTimeout(tT);tT=setTimeout(function(){t.className='toast'+(k?(' '+k):'');},1600);}
+
+  // ---------- settings ----------
+  function rosterToText(team){return state.teams[team].players.map(function(p){return (p.num!=null&&p.num!==''?p.num:'')+(p.name?(' '+p.name):'');}).join('\n').trim();}
+  function openSettings(){
+    el('tnameA').value=state.teams.A.name;el('tnameB').value=state.teams.B.name;
+    el('rosterA').value=rosterToText('A');el('rosterB').value=rosterToText('B');
+    renderStatConfig();
+    el('storeBanner').style.display=CAN_STORE?'none':'block';
+    el('settings').classList.add('open');el('inputPanel').style.display='none';
+  }
+  function closeSettings(){el('settings').classList.remove('open');el('inputPanel').style.display='block';}
+  function renderStatConfig(){
+    var host=el('statConfig');host.innerHTML='';
+    var list=PRESETS.concat(state.customs);
+    list.forEach(function(s){
+      var on=state.statIds.indexOf(s.id)>-1;var custom=!!s.custom;
+      var row=document.createElement('div');row.className='statrow';
+      row.innerHTML='<input type="checkbox" '+(on?'checked':'')+'><span class="lab">'+esc(s.label)+'</span>'+
+        '<span class="pt">'+(s.pts?('+'+s.pts):'　')+'</span>'+(custom?'<button class="rm">削除</button>':'');
+      row.querySelector('input').onchange=function(){var i=state.statIds.indexOf(s.id);
+        if(this.checked){if(i<0)state.statIds.push(s.id);}else{if(i>-1)state.statIds.splice(i,1);}};
+      if(custom){row.querySelector('.rm').onclick=function(){
+        state.customs=state.customs.filter(function(c){return c.id!==s.id;});
+        var i=state.statIds.indexOf(s.id);if(i>-1)state.statIds.splice(i,1);
+        state.events=state.events.filter(function(e){return e.statId!==s.id;});
+        renderStatConfig();};}
+      host.appendChild(row);
+    });
+  }
+  el('addStat').onclick=function(){
+    var lab=el('newStatLabel').value.trim();if(!lab){toast('項目名を入力','err');return;}
+    var pts=parseInt(el('newStatPts').value,10)||0;
+    var id='c'+(++state._cid);
+    state.customs.push({id:id,label:lab,sub:lab.slice(0,4),pts:pts,kw:[lab],custom:true});
+    state.statIds.push(id);el('newStatLabel').value='';el('newStatPts').value='0';renderStatConfig();
+  };
+  function reconcileRoster(team,text){
+    var existing=state.teams[team].players.slice();
+    var used={};var out=[];
+    text.split('\n').forEach(function(line){
+      line=z2h(line).trim();if(!line)return;
+      var m=line.match(/^(\d+)?\s*(.*)$/);var num=m[1]!=null&&m[1]!==''?parseInt(m[1],10):null;var name=(m[2]||'').trim();
+      // match existing by num then name
+      var match=null;
+      for(var i=0;i<existing.length;i++){var ex=existing[i];if(used[ex.id])continue;
+        if(num!=null&&ex.num===num){match=ex;break;}}
+      if(!match){for(var j=0;j<existing.length;j++){var ex2=existing[j];if(used[ex2.id])continue;if(name&&ex2.name===name){match=ex2;break;}}}
+      var id=match?match.id:('p'+(++state._pid));if(match)used[match.id]=1;
+      out.push({id:id,num:num,name:name});
+    });
+    return out;
+  }
+  el('saveSettings').onclick=function(){
+    var na=el('tnameA').value.trim()||'濃',nb=el('tnameB').value.trim()||'淡';
+    state.teams.A.name=na;state.teams.B.name=nb;
+    var ra=reconcileRoster('A',el('rosterA').value),rb=reconcileRoster('B',el('rosterB').value);
+    if(!ra.length||!rb.length){toast('各チーム最低1人','err');return;}
+    state.teams.A.players=ra;state.teams.B.players=rb;
+    if(!state.statIds.length){toast('項目を最低1つ','err');return;}
+    // prune orphan events
+    var valid={};['A','B'].forEach(function(t){state.teams[t].players.forEach(function(p){valid[t+':'+p.id]=1;});});
+    state.events=state.events.filter(function(e){return valid[e.team+':'+e.playerId];});
+    state.armed=null;persist();closeSettings();render();toast('保存しました','ok');
+  };
+  el('gear').onclick=function(){el('settings').classList.contains('open')?closeSettings():openSettings();};
+
+  // ---------- focus ----------
+  el('focusSeg').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;state.focus=b.dataset.f;persist();render();});
+
+  // ---------- command / voice ----------
+  el('cmdGo').onclick=function(){var inp=el('cmdInput');if(runCommand(inp.value,'cmd'))inp.value='';};
+  el('cmdInput').addEventListener('keydown',function(e){if(e.key==='Enter')el('cmdGo').click();});
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition;var listening=false,rec=null;
+  if(SR){rec=new SR();rec.lang='ja-JP';rec.interimResults=false;rec.maxAlternatives=1;rec.continuous=false;
+    rec.onresult=function(ev){var txt=ev.results[0][0].transcript;el('cmdInput').value=txt;runCommand(txt,'voice');};
+    rec.onerror=function(ev){listening=false;el('mic').classList.remove('live');
+      toast(ev.error==='not-allowed'||ev.error==='service-not-allowed'?'🎙️ マイク不可。入力欄をどうぞ':'🎙️ 認識できませんでした','err');};
+    rec.onend=function(){listening=false;el('mic').classList.remove('live');};
+    el('mic').onclick=function(){if(listening){try{rec.stop();}catch(e){}return;}try{rec.start();listening=true;el('mic').classList.add('live');}catch(e){toast('🎙️ 起動できませんでした','err');}};
+  }else{var mic=el('mic');mic.textContent='🎙️ 音声非対応（入力欄を使用）';mic.disabled=true;}
+
+  el('undo').onclick=undo;el('reset').onclick=reset;
+  if(!CAN_STORE)el('storeBannerMain').style.display='block';
+
+  render();
+})();
+</script>
+</body>
+</html>
