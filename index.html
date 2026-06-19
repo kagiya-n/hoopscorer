@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#12161B">
+<title>hoopscorer — ピックアップ・スタッツ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+</head>
+<body>
+<div class="wrap">
+
+  <div class="board">
+    <div class="score">
+      <div class="side"><span class="tag dark" id="nameA">濃</span><span class="pts dark" id="scoreA">0</span></div>
+      <span class="colon">:</span>
+      <div class="side right"><span class="tag light" id="nameB">淡</span><span class="pts light" id="scoreB">0</span></div>
+    </div>
+    <div class="board-row">
+      <button class="mic" id="mic">🎙️ 音声で記録</button>
+      <button class="iconbtn" id="gear" aria-label="設定">⚙</button>
+    </div>
+    <div class="seg" id="focusSeg">
+      <button data-f="both">両チーム</button>
+      <button data-f="A">濃に集中</button>
+      <button data-f="B">淡に集中</button>
+    </div>
+  </div>
+
+  <div class="panel settings" id="settings">
+    <div class="banner" id="storeBanner" style="display:none">⚠ このプレビューでは端末保存が無効です。ファイルをDLして自分のブラウザで開くと自動保存されます。</div>
+    <div class="sec">
+      <h4>チーム名</h4>
+      <div class="twocol">
+        <div class="field"><label>濃チーム</label><input id="tnameA"></div>
+        <div class="field"><label>淡チーム</label><input id="tnameB"></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h4>ロスター（1行に1人 ／「10 タナカ」「サトウ」「23」）</h4>
+      <div class="twocol">
+        <div class="field"><label>濃</label><textarea id="rosterA"></textarea></div>
+        <div class="field"><label>淡</label><textarea id="rosterB"></textarea></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h4>記録する項目</h4>
+      <div class="statlist" id="statConfig"></div>
+      <div class="addrow">
+        <input id="newStatLabel" placeholder="項目名（例：ディフレクション）">
+        <input id="newStatPts" type="number" placeholder="点" value="0">
+        <button id="addStat">追加</button>
+      </div>
+    </div>
+    <button class="save" id="saveSettings">保存して試合に戻る</button>
+  </div>
+
+  <div class="panel" id="inputPanel">
+    <div class="banner" id="storeBannerMain" style="display:none">端末保存は無効中（メモリ動作）。実機ブラウザで開くと保存されます。</div>
+    <div class="armed empty" id="armed">記録する選手をタップ → 項目を選択</div>
+    <div id="teamChips"></div>
+    <div class="stats" id="stats"></div>
+    <div class="cmd">
+      <input id="cmdInput" placeholder="例：濃10 スリー ／ 淡5 リバウンド" autocomplete="off">
+      <button id="cmdGo">記録</button>
+    </div>
+    <p class="hint">音声も入力欄も同じ書式： <b>チーム＋選手＋項目</b>。例「<b>濃10 スリー</b>」「<b>淡 サトウ アシスト</b>」。チームを省くと選手から自動判定します。</p>
+  </div>
+
+  <div class="panel">
+    <p class="eyebrow">プレイ・バイ・プレイ</p>
+    <div class="feed" id="feed"></div>
+    <div class="feed-actions">
+      <button id="undo">↩ 直前を取り消す</button>
+      <button class="danger" id="reset">試合をリセット</button>
+    </div>
+  </div>
+
+  <div class="panel" id="boxPanel"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>
