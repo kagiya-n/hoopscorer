@@ -93,7 +93,8 @@ gcloud run deploy hoopscorer \
 
 完了後に表示される `https://hoopscorer-xxxxx.a.run.app` を本 README のここに追記してください：
 
-- 本番 URL： _未デプロイ_
+- 本番 URL： https://hoopscorer-748541005305.asia-northeast1.run.app
+- GCP プロジェクト： `kagiya-n` ／ リージョン：`asia-northeast1` ／ サービス名：`hoopscorer`
 
 `--allow-unauthenticated` は公開Webアプリ前提。HTTPS で配信されるので **Web Speech API の secure-context 要件**（マイク利用に必須）も満たします。
 
