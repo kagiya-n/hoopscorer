@@ -56,6 +56,10 @@
         <button id="addStat">追加</button>
       </div>
     </div>
+    <div class="sec">
+      <h4>過去の試合</h4>
+      <div class="gamelist" id="historyList"></div>
+    </div>
     <button class="save" id="saveSettings">保存して試合に戻る</button>
   </div>
 
@@ -75,12 +79,28 @@
     <p class="eyebrow">プレイ・バイ・プレイ</p>
     <div class="feed" id="feed"></div>
     <div class="feed-actions">
-      <button id="undo">↩ 直前を取り消す</button>
-      <button class="danger" id="reset">試合をリセット</button>
+      <button id="undo">↩ 取消</button>
+      <button id="share">📋 共有</button>
+      <button id="archive">💾 保存して新規</button>
+      <button class="danger" id="reset">🗑 リセット</button>
     </div>
   </div>
 
   <div class="panel" id="boxPanel"></div>
+</div>
+
+<div class="sheet-backdrop" id="sheetBackdrop"></div>
+<div class="sheet" id="shareSheet" role="dialog" aria-modal="true" aria-label="共有形式を選択">
+  <h3>共有形式を選ぶ</h3>
+  <button class="sheet-row" data-fmt="text">
+    <span class="ico">📝</span>
+    <span class="grow">テキストでコピー<small>LINE / Slack に貼り付け向け</small></span>
+  </button>
+  <button class="sheet-row" data-fmt="md">
+    <span class="ico">📊</span>
+    <span class="grow">Markdown 表でコピー<small>GitHub / Notion に貼り付け向け</small></span>
+  </button>
+  <button class="sheet-cancel" id="sheetCancel">キャンセル</button>
 </div>
 
 <div class="toast" id="toast"></div>

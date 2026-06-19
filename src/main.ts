@@ -5,6 +5,18 @@ import { defaultState, type AppState, type EventSrc, type Focus, type Player, ty
 import { PRESETS, type StatDef } from './presets';
 import { parse, z2h } from './parse';
 import { disp, render, type RenderHandlers } from './render';
+import {
+  autoLabel,
+  copyToClipboard,
+  deleteGame,
+  formatGameAsMarkdown,
+  formatGameAsText,
+  formatTimestamp,
+  loadHistory,
+  saveGame,
+  snapshotAsGame,
+  type SavedGame,
+} from './history';
 
 registerSW({ immediate: true });
 
@@ -137,12 +149,63 @@ function renderStatConfig(): void {
   }
 }
 
+function renderHistory(): void {
+  const host = el('historyList');
+  const games = loadHistory();
+  host.innerHTML = '';
+  if (!games.length) {
+    const empty = document.createElement('div');
+    empty.className = 'gamelist-empty';
+    empty.textContent = 'まだ保存された試合はありません。';
+    host.appendChild(empty);
+    return;
+  }
+  for (const g of games) {
+    const row = document.createElement('div');
+    row.className = 'gamerow';
+    const when = formatTimestamp(new Date(g.finishedAt));
+    row.innerHTML =
+      '<div class="top">' +
+      '<span class="lab"></span>' +
+      '<span class="score"></span>' +
+      '<span class="when"></span>' +
+      '</div>' +
+      '<div class="actions">' +
+      '<button data-act="text">📝 テキスト</button>' +
+      '<button data-act="md">📊 Markdown</button>' +
+      '<button class="rm" data-act="rm">🗑</button>' +
+      '</div>';
+    (row.querySelector('.lab') as HTMLSpanElement).textContent = g.label;
+    (row.querySelector('.score') as HTMLSpanElement).textContent =
+      g.teams.A.name + ' ' + g.scoreA + ' : ' + g.scoreB + ' ' + g.teams.B.name;
+    (row.querySelector('.when') as HTMLSpanElement).textContent = when;
+
+    row.querySelectorAll<HTMLButtonElement>('.actions button').forEach((btn) => {
+      const act = btn.dataset.act!;
+      btn.onclick = async () => {
+        if (act === 'rm') {
+          if (!confirm('この試合の記録を削除します。よろしいですか？')) return;
+          deleteGame(g.id);
+          renderHistory();
+          toast('削除しました');
+          return;
+        }
+        const text = act === 'text' ? formatGameAsText(g) : formatGameAsMarkdown(g);
+        const ok = await copyToClipboard(text);
+        toast(ok ? '✓ コピーしました' : '⚠ コピーに失敗', ok ? 'ok' : 'err');
+      };
+    });
+    host.appendChild(row);
+  }
+}
+
 function openSettings(): void {
   (el('tnameA') as HTMLInputElement).value = state.teams.A.name;
   (el('tnameB') as HTMLInputElement).value = state.teams.B.name;
   (el('rosterA') as HTMLTextAreaElement).value = rosterToText('A');
   (el('rosterB') as HTMLTextAreaElement).value = rosterToText('B');
   renderStatConfig();
+  renderHistory();
   (el('storeBanner') as HTMLDivElement).style.display = CAN_STORE ? 'none' : 'block';
   el('settings').classList.add('open');
   (el('inputPanel') as HTMLDivElement).style.display = 'none';
@@ -320,6 +383,82 @@ if (SR) {
 
 (el('undo') as HTMLButtonElement).onclick = undo;
 (el('reset') as HTMLButtonElement).onclick = resetGame;
+
+// ---------- 共有シート ----------
+function buildSnapshotForShare(): SavedGame {
+  const now = new Date();
+  const label = autoLabel(now, scoreOf('A'), scoreOf('B'), state.teams.A.name, state.teams.B.name);
+  return snapshotAsGame(state, label, now);
+}
+
+function scoreOf(team: TeamId): number {
+  let s = 0;
+  for (const e of state.events) {
+    if (e.team !== team) continue;
+    const d =
+      PRESETS.find((p) => p.id === e.statId) ??
+      state.customs.find((c) => c.id === e.statId) ??
+      null;
+    if (d) s += d.pts;
+  }
+  return s;
+}
+
+let shareTarget: SavedGame | null = null;
+
+function openShareSheet(target: SavedGame): void {
+  shareTarget = target;
+  el('sheetBackdrop').classList.add('open');
+  el('shareSheet').classList.add('open');
+}
+
+function closeShareSheet(): void {
+  el('sheetBackdrop').classList.remove('open');
+  el('shareSheet').classList.remove('open');
+  shareTarget = null;
+}
+
+(el('share') as HTMLButtonElement).onclick = () => {
+  if (!state.events.length) {
+    toast('まだ記録がありません', 'err');
+    return;
+  }
+  openShareSheet(buildSnapshotForShare());
+};
+
+(el('sheetBackdrop') as HTMLDivElement).onclick = closeShareSheet;
+(el('sheetCancel') as HTMLButtonElement).onclick = closeShareSheet;
+
+el('shareSheet').querySelectorAll<HTMLButtonElement>('.sheet-row').forEach((btn) => {
+  btn.onclick = async () => {
+    if (!shareTarget) return;
+    const fmt = btn.dataset.fmt;
+    const text = fmt === 'md' ? formatGameAsMarkdown(shareTarget) : formatGameAsText(shareTarget);
+    closeShareSheet();
+    const ok = await copyToClipboard(text);
+    toast(ok ? '✓ コピーしました' : '⚠ コピーに失敗', ok ? 'ok' : 'err');
+  };
+});
+
+// ---------- 試合を保存して新規 ----------
+(el('archive') as HTMLButtonElement).onclick = () => {
+  if (!state.events.length) {
+    toast('保存できる記録がありません', 'err');
+    return;
+  }
+  const now = new Date();
+  const defaultLabel = autoLabel(now, scoreOf('A'), scoreOf('B'), state.teams.A.name, state.teams.B.name);
+  const input = prompt('試合のラベル（任意）', defaultLabel);
+  if (input === null) return; // キャンセル
+  const label = input.trim() || defaultLabel;
+  const game = snapshotAsGame(state, label, now);
+  saveGame(game);
+  state.events = [];
+  state.armed = null;
+  persist(state);
+  rerender();
+  toast('✓ 保存しました', 'ok');
+};
 
 if (!CAN_STORE) (el('storeBannerMain') as HTMLDivElement).style.display = 'block';
 
